@@ -1,81 +1,203 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MercadoVeci</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f9f9f9;
-            margin: 0;
-            padding: 0;
-        }
-        header {
-            background-color: #2ecc71;
-            color: white;
-            padding: 15px;
-            text-align: center;
-            font-size: 1.5em;
-        }
-        main {
-            padding: 15px;
-        }
-        .producto {
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            padding: 10px;
-            margin-bottom: 10px;
-        }
-        .producto h3 {
-            margin: 0;
-            color: #333;
-        }
-        .producto p {
-            color: #777;
-            font-size: 0.9em;
-        }
-        .btn-comprar {
-            display: inline-block;
-            padding: 8px 12px;
-            background-color: #2ecc71;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-top: 5px;
-        }
-        .btn-comprar:hover {
-            background-color: #27ae60;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mercado Veci</title>
+  <style>
+    body{font-family:Arial, sans-serif;margin:0;background:#f3f7f0}
+    header{background:#4CAF50;color:#fff;padding:15px;text-align:center}
+    nav{background:#388E3C;padding:10px;text-align:center}
+    nav a{color:#fff;margin:0 10px;text-decoration:none}
+    .container{padding:20px;max-width:900px;margin:auto}
+    .card{background:#fff;padding:15px;margin:10px 0;border-radius:8px;box-shadow:0 2px 5px rgba(0,0,0,.1)}
+    button{background:#4CAF50;color:#fff;padding:10px;border:none;border-radius:6px;cursor:pointer}
+    button:hover{background:#45a049}
+    form{background:#fff;padding:15px;border-radius:8px;box-shadow:0 2px 5px rgba(0,0,0,.1);margin-bottom:20px}
+    form input, form textarea{width:100%;padding:8px;margin:6px 0;border:1px solid #ccc;border-radius:6px}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    @media (max-width:640px){.row{grid-template-columns:1fr}}
+    .muted{color:#666;font-size:.9em}
+    .badge{display:inline-block;padding:2px 8px;border-radius:12px;background:#e7f6ea;color:#2e7d32;font-size:.8em;margin-left:6px}
+  </style>
 </head>
 <body>
-    <header>
-        🛒 MercadoVeci
-    </header>
-    <main>
-        <div class="producto">
-            <h3>Tomates Frescos</h3>
-            <p>Precio: $1.20 / libra</p>
-            <button class="btn-comprar" onclick="comprar('Tomates Frescos')">Comprar</button>
+<header>
+  <h1>Mercado Veci</h1>
+  <p>Conectando familias para vender, comprar o trocar localmente</p>
+</header>
+
+<nav>
+  <a href="#">Inicio</a>
+  <a href="#publicar">Publicar</a>
+  <a href="#listado">Listado</a>
+  <a href="#ayuda">Ayuda</a>
+</nav>
+
+<div class="container">
+  <h2 id="publicar">Publicar un producto</h2>
+  <form id="productForm">
+    <div class="row">
+      <div>
+        <label>Nombre del producto</label>
+        <input type="text" id="nombreProducto" required />
+      </div>
+      <div>
+        <label>Precio (USD)</label>
+        <input type="number" id="precioProducto" step="0.01" min="0" required />
+      </div>
+    </div>
+
+    <div class="row">
+      <div>
+        <label>Nombre del vendedor</label>
+        <input type="text" id="nombreVendedor" required />
+      </div>
+      <div>
+        <label>Teléfono (WhatsApp)</label>
+        <input type="tel" id="telefono" placeholder="+593..." />
+      </div>
+    </div>
+
+    <label>Descripción</label>
+    <textarea id="descripcionProducto" rows="3" placeholder="Ej. horario, punto de entrega, trueque, etc."></textarea>
+
+    <button type="submit">Publicar</button>
+    <span class="muted" id="status"></span>
+  </form>
+
+  <h2 id="listado">Productos publicados <span class="badge" id="count">0</span></h2>
+  <div class="row" style="grid-template-columns:1fr 1fr 1fr; gap:12px" id="productos"></div>
+
+  <section id="ayuda" class="card">
+    <h3>¿Cómo funciona?</h3>
+    <ol class="muted">
+      <li>Publica tu producto con el formulario de arriba.</li>
+      <li>Se guarda en Google Sheets y aparece en el listado.</li>
+      <li>Los compradores te contactan por WhatsApp o llamada.</li>
+      <li>Si no hay internet, igual verás tus publicaciones locales (se guardan en tu celular).</li>
+    </ol>
+  </section>
+</div>
+
+<footer style="background:#388E3C;color:#fff;text-align:center;padding:10px;margin-top:20px">
+  © 2025 Mercado Veci — Hecho para familias ecuatorianas
+</footer>
+
+<script>
+  // === CONFIG ===
+  const WEB_APP_URL = "PASTE_YOUR_WEB_APP_URL_HERE"; // <-- pon aquí tu URL de Apps Script
+
+  // Fallback local
+  const LS_KEY = "mercadoveci_publicaciones";
+
+  const form = document.getElementById("productForm");
+  const statusEl = document.getElementById("status");
+  const contenedor = document.getElementById("productos");
+  const countEl = document.getElementById("count");
+
+  function cargarLocal() {
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch { return []; }
+  }
+
+  function guardarLocal(pub) {
+    const data = cargarLocal();
+    data.unshift(pub);
+    localStorage.setItem(LS_KEY, JSON.stringify(data));
+  }
+
+  function render(publicaciones) {
+    contenedor.innerHTML = "";
+    countEl.textContent = publicaciones.length;
+    publicaciones.forEach(p => {
+      const card = document.createElement("div");
+      card.className = "card";
+      const wspLink = p.telefono
+        ? `https://wa.me/${p.telefono.replace(/[^0-9+]/g, '')}?text=${encodeURIComponent("Hola, me interesa tu producto: " + p.producto)}`
+        : "";
+      card.innerHTML = `
+        <h3>${p.producto}</h3>
+        <p class="muted"><strong>Vendedor:</strong> ${p.vendedor}</p>
+        <p><strong>Precio:</strong> $${Number(p.precio).toFixed(2)}</p>
+        <p>${p.descripcion || ""}</p>
+        <div style="display:flex; gap:8px; margin-top:6px;">
+          ${wspLink ? `<a href="${wspLink}" target="_blank"><button>WhatsApp</button></a>` : ""}
+          ${p.telefono ? `<a href="tel:${p.telefono}"><button>Llamar</button></a>` : ""}
         </div>
-        <div class="producto">
-            <h3>Pan Artesanal</h3>
-            <p>Precio: $0.50 / unidad</p>
-            <button class="btn-comprar" onclick="comprar('Pan Artesanal')">Comprar</button>
-        </div>
-        <div class="producto">
-            <h3>Leche Entera</h3>
-            <p>Precio: $0.90 / litro</p>
-            <button class="btn-comprar" onclick="comprar('Leche Entera')">Comprar</button>
-        </div>
-    </main>
-    <script>
-        function comprar(producto) {
-            alert("Has comprado: " + producto);
-        }
-    </script>
+      `;
+      contenedor.appendChild(card);
+    });
+  }
+
+  // Carga inicial desde local (rápido)
+  render(cargarLocal());
+
+  // Cargar también desde el backend (si existe)
+  (async function cargarRemoto() {
+    if (!WEB_APP_URL || WEB_APP_URL.includes("PASTE_YOUR_WEB_APP_URL_HERE")) return;
+    try {
+      const res = await fetch(WEB_APP_URL);
+      const data = await res.json();
+      // Fusionar remoto + local (evitar duplicados simples por producto+vendedor+precio)
+      const local = cargarLocal();
+      const key = p => [p.producto, p.vendedor, p.precio].join("|");
+      const mapa = new Map([...local, ...data].map(x => [key(x), x]));
+      const combinados = Array.from(mapa.values());
+      render(combinados);
+    } catch (e) {
+      console.warn("No se pudo cargar remoto:", e);
+    }
+  })();
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    statusEl.textContent = "Guardando...";
+    const pub = {
+      producto: document.getElementById("nombreProducto").value.trim(),
+      precio: document.getElementById("precioProducto").value.trim(),
+      vendedor: document.getElementById("nombreVendedor").value.trim(),
+      telefono: document.getElementById("telefono").value.trim(),
+      descripcion: document.getElementById("descripcionProducto").value.trim()
+    };
+
+    // Validación mínima
+    if (!pub.producto || !pub.precio || !pub.vendedor) {
+      statusEl.textContent = "Completa producto, precio y vendedor.";
+      return;
+    }
+
+    // Guardar primero local para que se vea al instante
+    guardarLocal(pub);
+    render(cargarLocal());
+
+    // Intentar enviar al backend
+    if (!WEB_APP_URL || WEB_APP_URL.includes("PASTE_YOUR_WEB_APP_URL_HERE")) {
+      statusEl.textContent = "Guardado local (configura la URL del backend para guardar en Sheets).";
+      form.reset();
+      return;
+    }
+
+    try {
+      const res = await fetch(WEB_APP_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(pub)
+      });
+      const json = await res.json();
+      if (json.ok) {
+        statusEl.textContent = "Guardado en Google Sheets ✅";
+      } else {
+        statusEl.textContent = "Guardado local (falló el backend).";
+      }
+    } catch (err) {
+      console.error(err);
+      statusEl.textContent = "Sin conexión: guardado local.";
+    }
+    form.reset();
+  });
+</script>
 </body>
 </html>
