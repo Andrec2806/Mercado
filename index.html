@@ -7,43 +7,64 @@
   <style>
     :root{
       --brand:#FF9800;      /* naranja */
-      --brand-dark:#E68900; /* naranja oscuro */
-      --bg:#f3f7f0;
+      --brand-dark:#D97900; /* naranja oscuro */
+      --bg:#f4f8f0;
       --text:#1b1b1b;
       --muted:#666;
     }
+    *{box-sizing:border-box}
     body{font-family:Arial, sans-serif;margin:0;background:var(--bg);color:var(--text)}
-    header{background:var(--brand);color:#fff;padding:10px 15px}
-    .header-inner{max-width:980px;margin:auto;display:flex;align-items:center;gap:12px}
-    .brand-logo{width:56px;height:56px;object-fit:cover;border-radius:8px;background:#fff}
+    header{background:var(--brand);color:#fff}
+    .header-inner{
+      max-width:980px;margin:auto;display:flex;align-items:center;gap:12px;
+      padding:10px 14px;
+    }
+    .brand-logo{
+      width:64px;height:64px;border-radius:10px;background:#fff;
+      object-fit:contain; /* ¡clave para que se vea completo! */
+      border:2px solid rgba(255,255,255,.3);
+    }
     .brand-title{line-height:1}
-    .brand-title h1{margin:0;font-size:1.5rem;letter-spacing:.5px}
-    .brand-title small{opacity:.9}
-    nav{background:var(--brand-dark);padding:10px}
-    nav .nav-inner{max-width:980px;margin:auto;display:flex;gap:16px;align-items:center}
-    nav a{color:#fff;text-decoration:none;font-weight:600}
+    .brand-title h1{margin:0;font-size:1.6rem;letter-spacing:.5px}
+    .brand-title small{opacity:.95;letter-spacing:1.2px}
+
+    nav{background:var(--brand-dark)}
+    .nav-inner{max-width:980px;margin:auto;display:flex;gap:18px;align-items:center;padding:10px 14px}
+    nav a{color:#fff;text-decoration:none;font-weight:700;opacity:.95}
+    nav a:hover{opacity:1;text-decoration:underline}
+
     .container{padding:20px;max-width:980px;margin:auto}
-    .card{background:#fff;padding:15px;margin:10px 0;border-radius:8px;box-shadow:0 2px 5px rgba(0,0,0,.1)}
-    button{background:var(--brand);color:#fff;padding:10px;border:none;border-radius:6px;cursor:pointer}
+    .card{background:#fff;padding:15px;margin:10px 0;border-radius:10px;box-shadow:0 2px 7px rgba(0,0,0,.06)}
+    button{background:var(--brand);color:#fff;padding:10px 14px;border:none;border-radius:8px;cursor:pointer;font-weight:700}
     button:hover{background:var(--brand-dark)}
-    form{background:#fff;padding:15px;border-radius:8px;box-shadow:0 2px 5px rgba(0,0,0,.1);margin-bottom:20px}
-    form input, form textarea{width:100%;padding:8px;margin:6px 0;border:1px solid #ccc;border-radius:6px}
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    form{background:#fff;padding:15px;border-radius:10px;box-shadow:0 2px 7px rgba(0,0,0,.06);margin-bottom:20px}
+    form input, form textarea{
+      width:100%;padding:10px;margin:6px 0;border:1px solid #cfcfcf;border-radius:8px;
+      outline:none
+    }
+    form input:focus, form textarea:focus{border-color:#9ad07a;box-shadow:0 0 0 3px rgba(154,208,122,.25)}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     @media (max-width:640px){.row{grid-template-columns:1fr}}
     .muted{color:var(--muted);font-size:.9em}
     .badge{display:inline-block;padding:2px 8px;border-radius:12px;background:#fff3e0;color:var(--brand-dark);font-size:.8em;margin-left:6px}
+
     .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
     @media (max-width:940px){.grid{grid-template-columns:repeat(2,1fr)}}
     @media (max-width:640px){.grid{grid-template-columns:1fr}}
-    .thumb{width:100%;height:180px;object-fit:cover;border-radius:8px;margin-bottom:8px;background:#eee}
-    .preview{width:120px;height:120px;object-fit:cover;border:1px dashed #aaa;border-radius:8px;display:block}
-    footer{background:var(--brand-dark);color:#fff;text-align:center;padding:10px;margin-top:20px}
+    .thumb{width:100%;height:190px;object-fit:cover;border-radius:10px;margin-bottom:8px;background:#eee}
+
+    .preview-wrap{display:flex;align-items:center;justify-content:center}
+    .preview{
+      width:140px;height:140px;object-fit:cover;border:2px dashed #bbb;border-radius:10px;display:none;background:#fafafa
+    }
+
+    footer{background:var(--brand-dark);color:#fff;text-align:center;padding:10px;margin-top:24px}
   </style>
 </head>
 <body>
 <header>
   <div class="header-inner">
-    <!-- Cambia LOGO_SRC si usas otro nombre/ubicación -->
+    <!-- Asegúrate de tener baguet-logo.png al lado de este index.html -->
     <img class="brand-logo" src="baguet-logo.png" alt="Logo Baguet Loja" id="logo">
     <div class="brand-title">
       <h1>BAGUET</h1>
@@ -94,7 +115,7 @@
         <input type="file" id="imagen" accept="image/*" />
         <small class="muted">Se comprimirá para ahorrar datos.</small>
       </div>
-      <div style="text-align:center">
+      <div class="preview-wrap">
         <img id="preview" class="preview" alt="Vista previa" />
       </div>
     </div>
@@ -112,9 +133,13 @@
 </footer>
 
 <script>
-  // === CONFIG ===
-  const WEB_APP_URL = "PASTE_YOUR_WEB_APP_URL_HERE"; // <-- pega aquí tu URL de Apps Script
+  /* ==== CONFIG ==== */
+  const WEB_APP_URL = "PASTE_YOUR_WEB_APP_URL_HERE"; // tu Apps Script
   const LS_KEY = "baguet_publicaciones_v2";
+  const LOGO_SRC = "baguet-logo.png"; // cambia si tu archivo tiene otro nombre
+
+  // Si quieres forzar el logo por dataURL, podrías reemplazar el src aquí:
+  document.getElementById("logo").src = LOGO_SRC;
 
   const form = document.getElementById("productForm");
   const statusEl = document.getElementById("status");
@@ -123,20 +148,19 @@
   const fileInput = document.getElementById("imagen");
   const previewImg = document.getElementById("preview");
 
-  let imageBase64 = ""; // dataURL comprimido
+  let imageBase64 = "";
 
   fileInput.addEventListener("change", async () => {
     const file = fileInput.files?.[0];
-    if (!file) { imageBase64 = ""; previewImg.src = ""; return; }
-    imageBase64 = await fileToCompressedDataURL(file, 1000, 0.8);
+    if (!file) { imageBase64 = ""; previewImg.src = ""; previewImg.style.display='none'; return; }
+    imageBase64 = await fileToCompressedDataURL(file, 1100, 0.8);
     previewImg.src = imageBase64;
+    previewImg.style.display = 'block';
   });
 
   function cargarLocal() {
-    try {
-      const raw = localStorage.getItem(LS_KEY);
-      return raw ? JSON.parse(raw) : [];
-    } catch { return []; }
+    try { return JSON.parse(localStorage.getItem(LS_KEY) || "[]"); }
+    catch { return []; }
   }
   function guardarLocal(pub) {
     const data = cargarLocal();
@@ -169,10 +193,10 @@
     });
   }
 
-  // Carga inicial desde local
+  // Carga inicial local
   render(cargarLocal());
 
-  // Carga desde backend
+  // Cargar también desde backend si está configurado
   (async function cargarRemoto() {
     if (!WEB_APP_URL || WEB_APP_URL.includes("PASTE_YOUR_WEB_APP_URL_HERE")) return;
     try {
@@ -204,14 +228,11 @@
       return;
     }
 
-    // Guardar primero local
     guardarLocal(pub);
     render(cargarLocal());
     form.reset();
-    previewImg.src = "";
-    imageBase64 = "";
+    previewImg.src = ""; previewImg.style.display='none'; imageBase64 = "";
 
-    // Enviar a backend
     if (!WEB_APP_URL || WEB_APP_URL.includes("PASTE_YOUR_WEB_APP_URL_HERE")) {
       statusEl.textContent = "Guardado local (configura URL para subir a Sheets/Drive).";
       return;
@@ -225,7 +246,7 @@
       const json = await res.json();
       if (json.ok) {
         statusEl.textContent = "Guardado en Sheets y Drive ✅";
-        // refrescar listado remoto para obtener imageUrl pública
+        // refrescar listado con URL pública
         setTimeout(async () => {
           const r = await fetch(WEB_APP_URL);
           const data = await r.json();
@@ -233,7 +254,7 @@
           const key = p => [p.producto, p.vendedor, p.precio, p.imageUrl].join("|");
           const mapa = new Map([...local, ...data].map(x => [key(x), x]));
           render(Array.from(mapa.values()));
-        }, 800);
+        }, 700);
       } else {
         statusEl.textContent = "Guardado local (falló backend).";
       }
@@ -243,8 +264,8 @@
     }
   });
 
-  // Utilidad: comprimir imagen a dataURL
-  function fileToCompressedDataURL(file, maxWidth = 1000, quality = 0.8) {
+  // Comprimir imagen a dataURL
+  function fileToCompressedDataURL(file, maxWidth = 1100, quality = 0.8) {
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -257,8 +278,7 @@
           canvas.width = w; canvas.height = h;
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, w, h);
-          const dataUrl = canvas.toDataURL('image/jpeg', quality);
-          resolve(dataUrl);
+          resolve(canvas.toDataURL('image/jpeg', quality));
         };
         img.src = e.target.result;
       };
